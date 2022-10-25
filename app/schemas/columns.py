@@ -1,8 +1,20 @@
+from pydoc import describe
+from typing import Optional
+from venv import create
 from pydantic import BaseModel
 from datetime import datetime
 
 
-class Column(BaseModel):
+class ColumnBase(BaseModel):
+    name: str
+    description: str
+    project_id: int
+    
+
+class ColumnCreate(ColumnBase):
+    pass
+
+class ColumnOut(BaseModel):
     id: int
     name: str
     description: str
