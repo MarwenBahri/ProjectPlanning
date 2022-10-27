@@ -4,7 +4,7 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 from ..database import Base
 
-class Column(Base):
+class TicketColumn(Base):
     __tablename__ = "columns"
 
     id = Column(Integer, primary_key=True, nullable=False)
