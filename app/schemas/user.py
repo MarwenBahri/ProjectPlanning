@@ -12,8 +12,6 @@ class UserBase(BaseModel):
     password : str
     phone_number: Optional[str]
     
-    class Config : 
-        use_enum_values = True
 
 class UserCreate(UserBase):
     pass
