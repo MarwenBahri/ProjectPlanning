@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
+from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from typing import List
 from .. import models, schemas, utils
@@ -19,7 +19,6 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     # hash the password - user.password
     hashed_password = utils.hash(user.password)
     user.password = hashed_password
-    
     
     user_query = db.query(models.User).filter(
         models.User.email == user.email)
