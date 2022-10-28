@@ -16,10 +16,12 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     pass
 
-class UserOut(UserBase):
+class UserOut(BaseModel):
     id : int
+    name: str
+    lastname: str
+    email: EmailStr
     created_at : datetime
+
     class Config : 
         orm_mode = True
-
-
