@@ -68,7 +68,7 @@ def delete_user(id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{id}", response_model=schemas.UserOut)
-def update_post(id: int, updated_user: schemas.UserCreate, db: Session = Depends(get_db)):
+def update_user(id: int, updated_user: schemas.UserCreate, db: Session = Depends(get_db)):
 
     user_query = db.query(models.User).filter(models.User.id == id)
 
