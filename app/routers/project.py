@@ -5,19 +5,18 @@ from .. import models, schemas
 from ..database import get_db
 
 router = APIRouter(
-    prefix="",
+    prefix="/projects",
     tags=["Project"]
 )
 
 
-@router.get("/{team_id}/{proj_id}/",  response_model=schemas.ProjectOut)
-def get_project(team_id: int, proj_id: int, db: Session = Depends(get_db)):
+@router.get("/{proj_id}/",  response_model=schemas.ProjectOut)
+def get_project(proj_id: int, db: Session = Depends(get_db)):
     user_id = 1
     project = db.query(models.Project
                        ).join(models.Team, models.Team.id == models.Project.team_id
                               ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                                      ).filter(models.UserTeam.user_id == user_id,
-                                              models.UserTeam.team_id == team_id,
                                               models.Project.id == proj_id,
                                               ).first()
     if(not project):
@@ -26,14 +25,14 @@ def get_project(team_id: int, proj_id: int, db: Session = Depends(get_db)):
     return project
 
 
-@router.post("/{team_id}",  status_code=status.HTTP_201_CREATED, response_model=schemas.ProjectOut)
-def create_project(project: schemas.ProjectBase, team_id: int, db: Session = Depends(get_db)):
+@router.post("/",  status_code=status.HTTP_201_CREATED, response_model=schemas.ProjectOut)
+def create_project(project: schemas.ProjectBase, db: Session = Depends(get_db)):
     user_id = 1
     new_project = models.Project(**project.dict())
     res = db.query(models.Team
                    ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                           ).filter(models.UserTeam.user_id == user_id,
-                                   models.UserTeam.team_id == team_id
+                                   models.Team.id == new_project.team_id 
                                    ).first()
     if(not res):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -44,14 +43,13 @@ def create_project(project: schemas.ProjectBase, team_id: int, db: Session = Dep
     return new_project
 
 
-@router.delete("/{team_id}/{proj_id}/",  status_code=status.HTTP_204_NO_CONTENT)
-def delete_project(team_id: int, proj_id: int, db: Session = Depends(get_db)):
+@router.delete("/{proj_id}/",  status_code=status.HTTP_204_NO_CONTENT)
+def delete_project( proj_id: int, db: Session = Depends(get_db)):
     user_id = 1
     project_query = db.query(models.Project
                              ).join(models.Team, models.Team.id == models.Project.team_id
                                     ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                                            ).filter(models.UserTeam.user_id == user_id,
-                                                    models.UserTeam.team_id == team_id,
                                                     models.Project.id == proj_id)
     if(not project_query.first()):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -63,21 +61,19 @@ def delete_project(team_id: int, proj_id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/{team_id}/{proj_id}/",  response_model=schemas.ProjectOut)
-def update_project(project: schemas.ProjectBase, team_id: int, proj_id: int, db: Session = Depends(get_db)):
+@router.put("/{proj_id}/",  response_model=schemas.ProjectOut)
+def update_project(project: schemas.ProjectBase,proj_id: int, db: Session = Depends(get_db)):
     user_id = 1
     project_query = db.query(models.Project
                              ).join(models.Team, models.Team.id == models.Project.team_id
                                     ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                                            ).filter(models.UserTeam.user_id == user_id,
-                                                    models.UserTeam.team_id == team_id,
                                                     models.Project.id == proj_id)
     if(not project_query.first()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Project with {id} does not exits")
     project_query = db.query(models.Project).filter(
         models.Project.id == proj_id)
-    print(project)
     project_query.update(project.dict(), synchronize_session=False)
     db.commit()
     return project_query.first()
