@@ -5,13 +5,13 @@ from .. import models, schemas
 from ..database import get_db
 
 router = APIRouter(
-    prefix="",
+    prefix="/tickets",
     tags=["ticket"]
 )
 
 
-@router.get("/{team_id}/{proj_id}/{col_id}/{ticket_id}",  response_model=schemas.TicketOut)
-def get_ticket(team_id: int, proj_id: int, col_id: int, ticket_id: int, db: Session = Depends(get_db)):
+@router.get("/{ticket_id}",  response_model=schemas.TicketOut)
+def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
     user_id = 1
     ticket = db.query(models.Ticket
                       ).join(models.TicketColumn, models.Ticket.column_id == models.TicketColumn.id
@@ -19,9 +19,6 @@ def get_ticket(team_id: int, proj_id: int, col_id: int, ticket_id: int, db: Sess
                                     ).join(models.Team, models.Team.id == models.Project.team_id
                                            ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                                                   ).filter(models.UserTeam.user_id == user_id,
-                                                           models.UserTeam.team_id == team_id,
-                                                           models.Project.id == proj_id,
-                                                           models.TicketColumn.id == col_id,
                                                            models.Ticket.id == ticket_id).first()
     if(not ticket):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -29,21 +26,16 @@ def get_ticket(team_id: int, proj_id: int, col_id: int, ticket_id: int, db: Sess
     return ticket
 
 
-@router.post("/{team_id}/{proj_id}/{col_id}/",  status_code=status.HTTP_201_CREATED, response_model=schemas.TicketOut)
-def create_ticket(ticket: schemas.TicketBase, team_id: int, proj_id: int, col_id: int, db: Session = Depends(get_db)):
+@router.post("/",  status_code=status.HTTP_201_CREATED, response_model=schemas.TicketOut)
+def create_ticket(ticket: schemas.TicketBase, db: Session = Depends(get_db)):
     user_id = 1
     new_ticket = models.Ticket(**ticket.dict())
-    if new_ticket.column_id != col_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail=f"Not authorized to perform requested action")
     col = db.query(models.TicketColumn
                    ).join(models.Project, models.Project.id == models.TicketColumn.project_id
                           ).join(models.Team, models.Team.id == models.Project.team_id
                                  ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                                         ).filter(models.UserTeam.user_id == user_id,
-                                                 models.UserTeam.team_id == team_id,
-                                                 models.Project.id == proj_id,
-                                                 models.TicketColumn.id == col_id,
+                                                 models.TicketColumn.id == new_ticket.column_id,
                                                  ).first()
     if(not col):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -54,8 +46,8 @@ def create_ticket(ticket: schemas.TicketBase, team_id: int, proj_id: int, col_id
     return new_ticket
 
 
-@router.delete("/{team_id}/{proj_id}/{col_id}/{ticket_id}",  status_code=status.HTTP_204_NO_CONTENT)
-def delete_ticket(team_id: int, proj_id: int, col_id: int, ticket_id: int, db: Session = Depends(get_db)):
+@router.delete("/{ticket_id}",  status_code=status.HTTP_204_NO_CONTENT)
+def delete_ticket(ticket_id: int, db: Session = Depends(get_db)):
     user_id = 1
     ticket_query = db.query(models.Ticket
                             ).join(models.TicketColumn, models.Ticket.column_id == models.TicketColumn.id
@@ -63,9 +55,6 @@ def delete_ticket(team_id: int, proj_id: int, col_id: int, ticket_id: int, db: S
                                           ).join(models.Team, models.Team.id == models.Project.team_id
                                                  ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                                                         ).filter(models.UserTeam.user_id == user_id,
-                                                                 models.UserTeam.team_id == team_id,
-                                                                 models.Project.id == proj_id,
-                                                                 models.TicketColumn.id == col_id,
                                                                  models.Ticket.id == ticket_id)
     ticket = ticket_query.first()
     if(not ticket):
@@ -78,8 +67,8 @@ def delete_ticket(team_id: int, proj_id: int, col_id: int, ticket_id: int, db: S
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/{team_id}/{proj_id}/{col_id}/{ticket_id}",  response_model=schemas.TicketOut)
-def update_ticket(ticket: schemas.TicketBase, team_id: int, proj_id: int, col_id: int, ticket_id: int, db: Session = Depends(get_db)):
+@router.put("/{ticket_id}",  response_model=schemas.TicketOut)
+def update_ticket(ticket: schemas.TicketBase,ticket_id: int, db: Session = Depends(get_db)):
     user_id = 1
     ticket_query = db.query(models.Ticket
                             ).join(models.TicketColumn, models.Ticket.column_id == models.TicketColumn.id
@@ -87,9 +76,6 @@ def update_ticket(ticket: schemas.TicketBase, team_id: int, proj_id: int, col_id
                                           ).join(models.Team, models.Team.id == models.Project.team_id
                                                  ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                                                         ).filter(models.UserTeam.user_id == user_id,
-                                                                 models.UserTeam.team_id == team_id,
-                                                                 models.Project.id == proj_id,
-                                                                 models.TicketColumn.id == col_id,
                                                                  models.Ticket.id == ticket_id)
     if(not ticket):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
