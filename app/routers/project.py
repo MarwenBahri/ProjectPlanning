@@ -11,7 +11,7 @@ router = APIRouter(
 
 
 @router.get("/{team_id}/{proj_id}/",  response_model=schemas.ProjectOut)
-def get_ticket(team_id: int, proj_id: int, db: Session = Depends(get_db)):
+def get_project(team_id: int, proj_id: int, db: Session = Depends(get_db)):
     user_id = 1
     project = db.query(models.Project
                        ).join(models.Team, models.Team.id == models.Project.team_id
