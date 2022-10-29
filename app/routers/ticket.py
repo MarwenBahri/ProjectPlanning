@@ -5,13 +5,13 @@ from .. import models, schemas
 from ..database import get_db
 
 router = APIRouter(
-    prefix="/project",
+    prefix="",
     tags=["ticket"]
 )
 
 
-@router.get("/{proj_id}/{col_id}/{ticket_id}",  response_model=schemas.TicketOut)
-def get_ticket(proj_id: int, col_id: int, ticket_id: int, db: Session = Depends(get_db)):
+@router.get("/{team_id}/{proj_id}/{col_id}/{ticket_id}",  response_model=schemas.TicketOut)
+def get_ticket(team_id: int, proj_id: int, col_id: int, ticket_id: int, db: Session = Depends(get_db)):
     user_id = 1
     ticket = db.query(models.Ticket
                       ).join(models.TicketColumn, models.Ticket.column_id == models.TicketColumn.id
@@ -19,6 +19,7 @@ def get_ticket(proj_id: int, col_id: int, ticket_id: int, db: Session = Depends(
                                     ).join(models.Team, models.Team.id == models.Project.team_id
                                            ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                                                   ).filter(models.UserTeam.user_id == user_id,
+                                                           models.UserTeam.team_id == team_id,
                                                            models.Project.id == proj_id,
                                                            models.TicketColumn.id == col_id,
                                                            models.Ticket.id == ticket_id).first()
@@ -28,8 +29,8 @@ def get_ticket(proj_id: int, col_id: int, ticket_id: int, db: Session = Depends(
     return ticket
 
 
-@router.post("/{proj_id}/{col_id}/",  status_code=status.HTTP_201_CREATED, response_model=schemas.TicketOut)
-def create_ticket(ticket: schemas.TicketBase, proj_id: int, col_id: int, db: Session = Depends(get_db)):
+@router.post("/{team_id}/{proj_id}/{col_id}/",  status_code=status.HTTP_201_CREATED, response_model=schemas.TicketOut)
+def create_ticket(ticket: schemas.TicketBase, team_id: int, proj_id: int, col_id: int, db: Session = Depends(get_db)):
     user_id = 1
     new_ticket = models.Ticket(**ticket.dict())
     if new_ticket.column_id != col_id:
@@ -40,6 +41,7 @@ def create_ticket(ticket: schemas.TicketBase, proj_id: int, col_id: int, db: Ses
                           ).join(models.Team, models.Team.id == models.Project.team_id
                                  ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                                         ).filter(models.UserTeam.user_id == user_id,
+                                                 models.UserTeam.team_id == team_id,
                                                  models.Project.id == proj_id,
                                                  models.TicketColumn.id == col_id,
                                                  ).first()
@@ -52,8 +54,8 @@ def create_ticket(ticket: schemas.TicketBase, proj_id: int, col_id: int, db: Ses
     return new_ticket
 
 
-@router.delete("/{proj_id}/{col_id}/{ticket_id}",  status_code=status.HTTP_204_NO_CONTENT)
-def delete_ticket(proj_id: int, col_id: int, ticket_id: int, db: Session = Depends(get_db)):
+@router.delete("/{team_id}/{proj_id}/{col_id}/{ticket_id}",  status_code=status.HTTP_204_NO_CONTENT)
+def delete_ticket(team_id: int, proj_id: int, col_id: int, ticket_id: int, db: Session = Depends(get_db)):
     user_id = 1
     ticket_query = db.query(models.Ticket
                             ).join(models.TicketColumn, models.Ticket.column_id == models.TicketColumn.id
@@ -61,6 +63,7 @@ def delete_ticket(proj_id: int, col_id: int, ticket_id: int, db: Session = Depen
                                           ).join(models.Team, models.Team.id == models.Project.team_id
                                                  ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                                                         ).filter(models.UserTeam.user_id == user_id,
+                                                                 models.UserTeam.team_id == team_id,
                                                                  models.Project.id == proj_id,
                                                                  models.TicketColumn.id == col_id,
                                                                  models.Ticket.id == ticket_id)
@@ -75,8 +78,8 @@ def delete_ticket(proj_id: int, col_id: int, ticket_id: int, db: Session = Depen
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/{proj_id}/{col_id}/{ticket_id}",  response_model=schemas.TicketOut)
-def update_ticket(ticket: schemas.TicketBase, proj_id: int, col_id: int, ticket_id: int, db: Session = Depends(get_db)):
+@router.put("/{team_id}/{proj_id}/{col_id}/{ticket_id}",  response_model=schemas.TicketOut)
+def update_ticket(ticket: schemas.TicketBase, team_id: int, proj_id: int, col_id: int, ticket_id: int, db: Session = Depends(get_db)):
     user_id = 1
     ticket_query = db.query(models.Ticket
                             ).join(models.TicketColumn, models.Ticket.column_id == models.TicketColumn.id
@@ -84,6 +87,7 @@ def update_ticket(ticket: schemas.TicketBase, proj_id: int, col_id: int, ticket_
                                           ).join(models.Team, models.Team.id == models.Project.team_id
                                                  ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                                                         ).filter(models.UserTeam.user_id == user_id,
+                                                                 models.UserTeam.team_id == team_id,
                                                                  models.Project.id == proj_id,
                                                                  models.TicketColumn.id == col_id,
                                                                  models.Ticket.id == ticket_id)
