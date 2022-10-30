@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
-from .. import models, schemas
+from .. import models, schemas, oauth2
 from ..database import get_db
 
 router = APIRouter(
@@ -11,8 +11,12 @@ router = APIRouter(
 
 
 @router.get("/{proj_id}/",  response_model=schemas.ProjectOut)
-def get_project(proj_id: int, db: Session = Depends(get_db)):
-    user_id = 1
+def get_project(
+        proj_id: int,
+        db: Session = Depends(get_db),
+        current_user: int = Depends(oauth2.get_current_user)):
+
+    user_id = current_user.id
     project = db.query(models.Project
                        ).join(models.Team, models.Team.id == models.Project.team_id
                               ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
@@ -26,13 +30,17 @@ def get_project(proj_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/",  status_code=status.HTTP_201_CREATED, response_model=schemas.ProjectOut)
-def create_project(project: schemas.ProjectBase, db: Session = Depends(get_db)):
-    user_id = 1
+def create_project(
+        project: schemas.ProjectBase,
+        db: Session = Depends(get_db),
+        current_user: int = Depends(oauth2.get_current_user)):
+
+    user_id = current_user.id
     new_project = models.Project(**project.dict())
     res = db.query(models.Team
                    ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
                           ).filter(models.UserTeam.user_id == user_id,
-                                   models.Team.id == new_project.team_id 
+                                   models.Team.id == new_project.team_id
                                    ).first()
     if(not res):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -44,8 +52,12 @@ def create_project(project: schemas.ProjectBase, db: Session = Depends(get_db)):
 
 
 @router.delete("/{proj_id}/",  status_code=status.HTTP_204_NO_CONTENT)
-def delete_project( proj_id: int, db: Session = Depends(get_db)):
-    user_id = 1
+def delete_project(
+        proj_id: int,
+        db: Session = Depends(get_db),
+        current_user: int = Depends(oauth2.get_current_user)):
+
+    user_id = current_user.id
     project_query = db.query(models.Project
                              ).join(models.Team, models.Team.id == models.Project.team_id
                                     ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
@@ -62,8 +74,13 @@ def delete_project( proj_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{proj_id}/",  response_model=schemas.ProjectOut)
-def update_project(project: schemas.ProjectBase,proj_id: int, db: Session = Depends(get_db)):
-    user_id = 1
+def update_project(
+        project: schemas.ProjectBase,
+        proj_id: int,
+        db: Session = Depends(get_db),
+        current_user: int = Depends(oauth2.get_current_user)):
+
+    user_id = current_user.id
     project_query = db.query(models.Project
                              ).join(models.Team, models.Team.id == models.Project.team_id
                                     ).join(models.UserTeam, models.Team.id == models.UserTeam.team_id
