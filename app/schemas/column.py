@@ -5,7 +5,7 @@ from datetime import datetime
 
 class ColumnBase(BaseModel):
     name: str
-    description: str
+    description: Optional[str]
     project_id: int
     
 
@@ -15,7 +15,7 @@ class ColumnCreate(ColumnBase):
 class ColumnOut(BaseModel):
     id: int
     name: str
-    description: str
+    description: Optional[str]
     created_at: datetime
     project_id: int
 
