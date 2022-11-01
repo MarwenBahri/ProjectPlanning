@@ -21,6 +21,7 @@ class UserOut(BaseModel):
     name: str
     lastname: str
     email: EmailStr
+    confirmed : bool
     created_at : datetime
 
     class Config : 
