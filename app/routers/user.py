@@ -1,8 +1,11 @@
+from aiosmtplib import send
 from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from typing import List
 from .. import models, schemas, utils, oauth2
+from ..config import settings
 from ..database import get_db
+from ..send_email import send_email_async
 
 router = APIRouter(
     prefix="/users",
@@ -14,7 +17,7 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
     # hash the password - user.password
     hashed_password = utils.hash(user.password)
@@ -27,10 +30,21 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="email already used")
 
     new_user = models.User(**user.dict())
+    
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-
+    confirmation  = models.EmailConfirmation(user_id=new_user.id , code=utils.generate_random_code())
+    db.add(confirmation)
+    db.commit()
+    await send_email_async(
+        subject= "Confirm your Project planning account",
+        email_to = new_user.email, 
+        body={
+            "username" : user.name,
+            "confirmation_link": f'{settings.host}confirm/{confirmation.code}'
+        }, 
+        template="confirmation")
     return new_user
 
 
