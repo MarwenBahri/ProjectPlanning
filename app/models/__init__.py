@@ -6,3 +6,4 @@ from .ticket import Ticket
 from .user_team_relation import UserTeam
 from .user import User
 from .confirmation import EmailConfirmation
+from .pass_reset import PasswordReset
