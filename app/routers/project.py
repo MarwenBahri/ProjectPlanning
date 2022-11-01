@@ -88,7 +88,7 @@ def update_project(
                                                     models.Project.id == proj_id)
     if(not project_query.first()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Project with {id} does not exits")
+                            detail=f"Project with {proj_id} does not exits")
     project_query = db.query(models.Project).filter(
         models.Project.id == proj_id)
     project_query.update(project.dict(), synchronize_session=False)
